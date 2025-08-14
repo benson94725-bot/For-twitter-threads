@@ -1,0 +1,7 @@
+# Playwright state file
+state.json
+
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
