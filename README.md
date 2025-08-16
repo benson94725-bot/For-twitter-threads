@@ -1,11 +1,11 @@
 # Twitter Thread Poster
 
-This script automates posting threads on Twitter using a reliable reply-based method.
+This script automates posting threads on Twitter using the single composer method.
 
 ## Features
 
 - Logs in to Twitter once and saves the session for future use.
-- Posts a thread of multiple tweets by replying to the previous one.
+- Posts a thread of multiple tweets from a single composer window.
 - Runs locally without needing a server.
 
 ## Setup
@@ -49,15 +49,15 @@ On subsequent runs, the script will use the saved session in `state.json` to log
 
 ## How it Works
 
-The script uses the Playwright library to control a web browser. It creates a thread using the following logic:
+The script uses the Playwright library to control a web browser. It creates a thread using the following simple and direct method:
 
-1.  It posts the first tweet from your home timeline.
-2.  It confirms the tweet was posted by waiting for a unique element on the new tweet's page to appear.
-3.  For every subsequent tweet in your list, it posts a reply to the previous tweet.
-4.  It confirms the reply was posted by waiting for the new tweet to appear on the page.
-5.  This process continues until all tweets are posted, creating a chain of replies that forms a thread.
+1.  It opens the main tweet composer.
+2.  It types the first tweet.
+3.  For each subsequent tweet, it clicks the "Add to thread" (`+`) button and types the tweet in the new text area that appears.
+4.  Once all tweets are typed into the composer, it clicks the final "Post all" button.
+5.  It then waits for the "Your post was sent" confirmation message to appear.
 
-This method is more reliable and avoids issues with Twitter's Content Security Policy.
+This method is much more reliable as it avoids complex page navigation.
 
 ---
 
@@ -65,9 +65,9 @@ This method is more reliable and avoids issues with Twitter's Content Security P
 
 ### The script fails with a `TimeoutError`
 
-This is the most common issue and it usually means that Twitter has updated its website structure, causing the script's selectors to become outdated.
+This usually means that Twitter has updated its website structure, causing the script's selectors to become outdated.
 
-To fix this, you need to find the new selector for the element that the script is failing to find.
+To fix this, you need to find the new selector for the element that is causing the script to fail.
 
 ### How to find and update selectors
 

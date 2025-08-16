@@ -3,22 +3,25 @@ import time
 from playwright.sync_api import sync_playwright
 
 # --- Start of Selectors ---
-# Selectors for the reply-based threading method.
+# Selectors for the "Single Composer" thread method.
 
-# The main tweet composer text area on the home page.
-HOME_TWEET_TEXTAREA = 'div[data-testid="tweetTextarea_0"]'
+# The button on the side navigation to open the tweet composer.
+NEW_TWEET_BUTTON = 'a[data-testid="SideNav_NewTweet_Button"]'
 
-# The button to post the first tweet.
-POST_FIRST_TWEET_BUTTON = '[aria-label="Post"]'
+# The text area for the first tweet in the composer.
+TWEET_TEXTAREA_FIRST = 'div[data-testid="tweetTextarea_0"]'
 
-# The text area for writing a reply on a tweet's page.
-REPLY_TEXTAREA = 'div[data-testid="tweetTextarea_0"]' # Often the same as the main composer
+# The button to add another tweet to the thread (the '+' button).
+ADD_TWEET_BUTTON = '[aria-label*="Add"]'
 
-# The button to post a reply.
-POST_REPLY_BUTTON = '[aria-label="Reply"]' # The reply button is usually labeled "Reply"
+# The text area for subsequent tweets (2nd, 3rd, etc.). {i} is the index.
+TWEET_TEXTAREA_SUBSEQUENT = 'div[data-testid="tweetTextarea_{i}"]'
 
-# A unique element on a tweet's page to confirm navigation.
-TWEET_ARTICLE_SELECTOR = 'article[data-testid="tweet"]'
+# The final button to post the entire thread.
+POST_THREAD_BUTTON = 'button[data-testid="tweetButton"]'
+
+# A selector for the "Your post was sent" confirmation message.
+POST_SUCCESS_MESSAGE = 'div[data-testid="toast"]'
 
 # --- End of Selectors ---
 
@@ -26,7 +29,7 @@ STATE_FILE = "state.json"
 
 def post_tweet_thread(tweets: list[str]):
     """
-    Posts a thread of tweets to Twitter by replying to the previous tweet.
+    Posts a thread of tweets using the "single composer" method.
     """
     if not tweets:
         print("No tweets to post.")
@@ -55,31 +58,23 @@ def post_tweet_thread(tweets: list[str]):
         page.goto("https://x.com/")
         print("Successfully navigated to Twitter home page.")
 
-        # Post the first tweet
-        print(f"Posting first tweet: {tweets[0]}")
-        page.wait_for_selector(HOME_TWEET_TEXTAREA).fill(tweets[0])
-        page.wait_for_selector(POST_FIRST_TWEET_BUTTON).click()
+        # Open the tweet composer
+        page.wait_for_selector(NEW_TWEET_BUTTON).click()
 
-        # Wait for navigation to the tweet page by looking for a unique element
-        page.wait_for_selector(TWEET_ARTICLE_SELECTOR)
-        last_tweet_url = page.url
-        print(f"First tweet posted at: {last_tweet_url}")
+        # Write the first tweet
+        page.wait_for_selector(TWEET_TEXTAREA_FIRST).fill(tweets[0])
 
-        # Post subsequent tweets as replies
-        for tweet_text in tweets[1:]:
-            # The page is already on the last tweet's URL, so we can reply directly.
-            print(f"Replying with: {tweet_text}")
+        # Write subsequent tweets
+        for i, tweet_text in enumerate(tweets[1:], start=1):
+            page.wait_for_selector(ADD_TWEET_BUTTON).click()
+            selector = TWEET_TEXTAREA_SUBSEQUENT.format(i=i)
+            page.wait_for_selector(selector).fill(tweet_text)
 
-            # Wait for reply textarea and fill it
-            page.wait_for_selector(REPLY_TEXTAREA).fill(tweet_text)
+        # Post the entire thread
+        page.wait_for_selector(POST_THREAD_BUTTON).click()
 
-            # Click the reply button
-            page.wait_for_selector(POST_REPLY_BUTTON).click()
-
-            # Wait for the new tweet to appear on the page
-            page.wait_for_selector(f'article:has-text("{tweet_text}")')
-            last_tweet_url = page.url # The URL might not change, but we update it just in case
-            print(f"Replied successfully.")
+        # Wait for the success message to appear
+        page.wait_for_selector(POST_SUCCESS_MESSAGE)
 
         print("Tweet thread posted successfully!")
         browser.close()
