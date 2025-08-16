@@ -36,9 +36,6 @@ def post_tweet_thread(tweets: list[str]):
         page = context.new_page()
         page.goto("https://x.com/")
 
-        # Add a small delay to ensure the page is fully loaded
-        time.sleep(5)
-
         print("Successfully navigated to Twitter home page.")
 
         if not tweets:
@@ -46,29 +43,36 @@ def post_tweet_thread(tweets: list[str]):
             browser.close()
             return
 
-        # Click the main tweet button on the side navigation to open the composer
-        page.click('a[data-testid="SideNav_NewTweet_Button"]')
+        # Wait for the main tweet button to be visible and click it
+        new_tweet_button_selector = 'a[data-testid="SideNav_NewTweet_Button"]'
+        page.wait_for_selector(new_tweet_button_selector).click()
 
-        # Wait for the tweet composer to appear
-        first_tweet_composer = page.wait_for_selector('div[data-testid="tweetTextarea_0"]')
-
-        # Type the first tweet
+        # Wait for the tweet composer to appear and type the first tweet
+        first_tweet_composer_selector = 'div[data-testid="tweetTextarea_0"]'
+        first_tweet_composer = page.wait_for_selector(first_tweet_composer_selector)
         first_tweet_composer.fill(tweets[0])
 
         # Add subsequent tweets to the thread
         for i, tweet_text in enumerate(tweets[1:], start=1):
-            # The "Add to thread" button selector
-            add_tweet_button_selector = 'div[aria-label="Add a Tweet"]'
-            page.click(add_tweet_button_selector)
+            # Selector for the "Add to thread" button.
+            # Twitter UI can change, so if this fails, you might need to find the new selector.
+            # Alternative selectors to try:
+            # add_tweet_button_selector = 'div[aria-label*="Add"]'
+            # add_tweet_button_selector = 'button[data-testid="addButton"]'
+            add_tweet_button_selector = '[data-testid="addTweet"]'
+
+            add_button = page.wait_for_selector(add_tweet_button_selector)
+            add_button.click()
 
             # Wait for the next tweet box to appear and type the tweet
             next_tweet_composer_selector = f'div[data-testid="tweetTextarea_{i}"]'
             next_tweet_composer = page.wait_for_selector(next_tweet_composer_selector)
             next_tweet_composer.fill(tweet_text)
 
-        # Click the "Tweet all" button
+        # Wait for the "Tweet all" button to be clickable and click it
         tweet_all_button_selector = 'div[data-testid="tweetButton"]'
-        page.click(tweet_all_button_selector)
+        tweet_all_button = page.wait_for_selector(tweet_all_button_selector)
+        tweet_all_button.click()
 
         print("Tweet thread posted successfully.")
 
