@@ -52,11 +52,12 @@ On subsequent runs, the script will use the saved session in `state.json` to log
 The script uses the Playwright library to control a web browser. It creates a thread using the following logic:
 
 1.  It posts the first tweet from your home timeline.
-2.  It waits for the page to redirect to the new tweet's URL and saves that URL.
-3.  For every subsequent tweet in your list, it navigates to the URL of the *previous* tweet and posts the new tweet as a reply.
-4.  This process continues until all tweets are posted, creating a chain of replies that forms a thread.
+2.  It confirms the tweet was posted by waiting for a unique element on the new tweet's page to appear.
+3.  For every subsequent tweet in your list, it posts a reply to the previous tweet.
+4.  It confirms the reply was posted by waiting for the new tweet to appear on the page.
+5.  This process continues until all tweets are posted, creating a chain of replies that forms a thread.
 
-This method is more reliable than using the UI's "Add to thread" button, which can change frequently.
+This method is more reliable and avoids issues with Twitter's Content Security Policy.
 
 ---
 

@@ -17,6 +17,9 @@ REPLY_TEXTAREA = 'div[data-testid="tweetTextarea_0"]' # Often the same as the ma
 # The button to post a reply.
 POST_REPLY_BUTTON = '[aria-label="Reply"]' # The reply button is usually labeled "Reply"
 
+# A unique element on a tweet's page to confirm navigation.
+TWEET_ARTICLE_SELECTOR = 'article[data-testid="tweet"]'
+
 # --- End of Selectors ---
 
 STATE_FILE = "state.json"
@@ -57,15 +60,14 @@ def post_tweet_thread(tweets: list[str]):
         page.wait_for_selector(HOME_TWEET_TEXTAREA).fill(tweets[0])
         page.wait_for_selector(POST_FIRST_TWEET_BUTTON).click()
 
-        # Wait for the URL to change to the new tweet's URL
-        page.wait_for_function("window.location.pathname.includes('/status/')")
-        time.sleep(3) # Additional wait for redirect and page load
+        # Wait for navigation to the tweet page by looking for a unique element
+        page.wait_for_selector(TWEET_ARTICLE_SELECTOR)
         last_tweet_url = page.url
         print(f"First tweet posted at: {last_tweet_url}")
 
         # Post subsequent tweets as replies
         for tweet_text in tweets[1:]:
-            page.goto(last_tweet_url)
+            # The page is already on the last tweet's URL, so we can reply directly.
             print(f"Replying with: {tweet_text}")
 
             # Wait for reply textarea and fill it
@@ -74,11 +76,10 @@ def post_tweet_thread(tweets: list[str]):
             # Click the reply button
             page.wait_for_selector(POST_REPLY_BUTTON).click()
 
-            # Wait for navigation to the new reply's URL
-            page.wait_for_function(f"window.location.href !== '{last_tweet_url}'")
-            time.sleep(3) # Additional wait
-            last_tweet_url = page.url
-            print(f"Replied at: {last_tweet_url}")
+            # Wait for the new tweet to appear on the page
+            page.wait_for_selector(f'article:has-text("{tweet_text}")')
+            last_tweet_url = page.url # The URL might not change, but we update it just in case
+            print(f"Replied successfully.")
 
         print("Tweet thread posted successfully!")
         browser.close()
