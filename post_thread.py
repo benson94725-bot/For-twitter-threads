@@ -9,13 +9,13 @@ from playwright.sync_api import sync_playwright
 HOME_TWEET_TEXTAREA = 'div[data-testid="tweetTextarea_0"]'
 
 # The button to post the first tweet.
-POST_FIRST_TWEET_BUTTON = 'button[data-testid="tweetButton"]'
+POST_FIRST_TWEET_BUTTON = '[aria-label="Post"]'
 
 # The text area for writing a reply on a tweet's page.
 REPLY_TEXTAREA = 'div[data-testid="tweetTextarea_0"]' # Often the same as the main composer
 
 # The button to post a reply.
-POST_REPLY_BUTTON = 'button[data-testid="tweetButton"]' # Often the same as the main post button
+POST_REPLY_BUTTON = '[aria-label="Reply"]' # The reply button is usually labeled "Reply"
 
 # --- End of Selectors ---
 
