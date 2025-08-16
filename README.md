@@ -1,11 +1,11 @@
 # Twitter Thread Poster
 
-This script automates posting threads on Twitter using Playwright.
+This script automates posting threads on Twitter using a reliable reply-based method.
 
 ## Features
 
 - Logs in to Twitter once and saves the session for future use.
-- Posts a thread of multiple tweets.
+- Posts a thread of multiple tweets by replying to the previous one.
 - Runs locally without needing a server.
 
 ## Setup
@@ -47,41 +47,40 @@ On subsequent runs, the script will use the saved session in `state.json` to log
 
 ---
 
+## How it Works
+
+The script uses the Playwright library to control a web browser. It creates a thread using the following logic:
+
+1.  It posts the first tweet from your home timeline.
+2.  It waits for the page to redirect to the new tweet's URL and saves that URL.
+3.  For every subsequent tweet in your list, it navigates to the URL of the *previous* tweet and posts the new tweet as a reply.
+4.  This process continues until all tweets are posted, creating a chain of replies that forms a thread.
+
+This method is more reliable than using the UI's "Add to thread" button, which can change frequently.
+
+---
+
 ## Troubleshooting
 
 ### The script fails with a `TimeoutError`
 
-This is the most common issue and it usually means that Twitter has updated its website structure, causing the script's selectors to become outdated. The error message will typically say something like `Timeout 30000ms exceeded. waiting for locator(...)`.
+This is the most common issue and it usually means that Twitter has updated its website structure, causing the script's selectors to become outdated.
 
 To fix this, you need to find the new selector for the element that the script is failing to find.
 
 ### How to find and update selectors
 
 1.  **Force the browser to be visible:**
-    The script runs in headless mode (no visible browser) when a `state.json` file is present. To debug, you need to see what the script is doing. **Delete the `state.json` file** to force the script to open a visible browser window for a new login.
+    The script runs in headless mode when `state.json` is present. To debug, **delete the `state.json` file** to force the script to open a visible browser window.
 
 2.  **Run the script and open Developer Tools:**
-    Run `python post_thread.py`. When the browser window opens to the Twitter login page, press `F12` or `Ctrl+Shift+I` (or `Cmd+Option+I` on Mac) to open the Developer Tools.
+    Run `python post_thread.py`. When the browser opens, press `F12` or `Ctrl+Shift+I` (`Cmd+Option+I` on Mac) to open the Developer Tools.
 
 3.  **Find the element and its selector:**
-    *   In the Developer Tools, click on the "Inspector" or "Elements" tab.
-    *   Click the "element picker" tool (it usually looks like a mouse cursor in a box).
-    *   On the Twitter page, click on the button or element that the script is failing to find (e.g., the "Add to thread" button).
-    *   The HTML for that element will be highlighted in the Developer Tools.
-    *   Look for a stable and unique attribute for the element, such as `data-testid`, `aria-label`, or a unique `id`. `data-testid` is usually the most reliable.
+    *   In Developer Tools, use the "element picker" tool to click on the button or element that is causing the script to fail.
+    *   The HTML for that element will be highlighted. Look for a stable attribute like `data-testid` or `aria-label`.
 
 4.  **Update the selectors in `post_thread.py`:**
-    *   Open `post_thread.py` in a text editor.
-    *   At the top of the file, you will find a section with selector constants (e.g., `NEW_TWEET_BUTTON`, `ADD_TWEET_BUTTON`).
-    *   Replace the value of the outdated selector with the new one you found. For example, if you found a new `data-testid` for the "Add Tweet" button, you would change the `ADD_TWEET_BUTTON` constant.
+    *   Open `post_thread.py`. At the top of the file, you will find the selector constants.
+    *   Replace the value of the outdated selector with the new one you found.
     *   Save the file and try running the script again.
-
----
-
-## How it Works
-
-The script uses the Playwright library to control a web browser. It automates the steps of logging in, composing a tweet, adding more tweets to create a thread, and posting the thread.
-
-## `.gitignore`
-
-The `state.json` file, which contains your session cookies, is included in the `.gitignore` file to prevent it from being accidentally committed to version control.
