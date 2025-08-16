@@ -2,6 +2,28 @@ import os
 import time
 from playwright.sync_api import sync_playwright
 
+# --- Start of Selectors ---
+# Selectors for Twitter UI elements. These may change over time.
+# If the script fails, you may need to update these selectors.
+# See the README.md for instructions on how to find new selectors.
+
+# The button on the side navigation to open the tweet composer
+NEW_TWEET_BUTTON = 'a[data-testid="SideNav_NewTweet_Button"]'
+
+# The main text area for the first tweet in the composer
+TWEET_TEXTAREA_FIRST = 'div[data-testid="tweetTextarea_0"]'
+
+# The text area for subsequent tweets in a thread. The '{i}' will be replaced with the tweet index.
+TWEET_TEXTAREA_SUBSEQUENT = 'div[data-testid="tweetTextarea_{i}"]'
+
+# The button to add another tweet to the thread.
+ADD_TWEET_BUTTON = 'div[aria-label*="Add"]' # Using a partial match for the aria-label
+
+# The button to post the entire thread.
+POST_THREAD_BUTTON = 'div[data-testid="tweetButton"]'
+
+# --- End of Selectors ---
+
 STATE_FILE = "state.json"
 
 def post_tweet_thread(tweets: list[str]):
@@ -44,34 +66,24 @@ def post_tweet_thread(tweets: list[str]):
             return
 
         # Wait for the main tweet button to be visible and click it
-        new_tweet_button_selector = 'a[data-testid="SideNav_NewTweet_Button"]'
-        page.wait_for_selector(new_tweet_button_selector).click()
+        page.wait_for_selector(NEW_TWEET_BUTTON).click()
 
         # Wait for the tweet composer to appear and type the first tweet
-        first_tweet_composer_selector = 'div[data-testid="tweetTextarea_0"]'
-        first_tweet_composer = page.wait_for_selector(first_tweet_composer_selector)
+        first_tweet_composer = page.wait_for_selector(TWEET_TEXTAREA_FIRST)
         first_tweet_composer.fill(tweets[0])
 
         # Add subsequent tweets to the thread
         for i, tweet_text in enumerate(tweets[1:], start=1):
-            # Selector for the "Add to thread" button.
-            # Twitter UI can change, so if this fails, you might need to find the new selector.
-            # Alternative selectors to try:
-            # add_tweet_button_selector = 'div[aria-label*="Add"]'
-            # add_tweet_button_selector = 'button[data-testid="addButton"]'
-            add_tweet_button_selector = '[data-testid="addTweet"]'
-
-            add_button = page.wait_for_selector(add_tweet_button_selector)
+            add_button = page.wait_for_selector(ADD_TWEET_BUTTON)
             add_button.click()
 
             # Wait for the next tweet box to appear and type the tweet
-            next_tweet_composer_selector = f'div[data-testid="tweetTextarea_{i}"]'
+            next_tweet_composer_selector = TWEET_TEXTAREA_SUBSEQUENT.format(i=i)
             next_tweet_composer = page.wait_for_selector(next_tweet_composer_selector)
             next_tweet_composer.fill(tweet_text)
 
         # Wait for the "Tweet all" button to be clickable and click it
-        tweet_all_button_selector = 'div[data-testid="tweetButton"]'
-        tweet_all_button = page.wait_for_selector(tweet_all_button_selector)
+        tweet_all_button = page.wait_for_selector(POST_THREAD_BUTTON)
         tweet_all_button.click()
 
         print("Tweet thread posted successfully.")
